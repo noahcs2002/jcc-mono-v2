@@ -3,15 +3,12 @@
 ## App
 
 ## API
+- You will need to obtain the application.properties file for your machine from another developer. This has secret information it it, and is required for the API layer to run, including DB connection info, JWT secrets, and connection strings.
 
 ## Database
 ### Adding new Permissions
 - All stored procedures in the database belong to the `APP_USER` schema.
-- To add a new permission to the system, run the stored proc `INSERT_PERMISSION()`. This procedure takes the following params:
-    - `p\_key` : The key ('`CREATE_PRODUCT`')
-    - `p\description` : The description ('`Creates a new product`')
-    - `p\domain` : The domain ('`PRODUCT`')
-    - `p\_role_name` : The name of the role to grant this to ('`Company Owner`')
+- See the file in the `sql` folder for information on how to add a new permission. In addition to using that file, you need to add it to the PermissionKeys.java file as well.
 
 - To apply all listed permissions to the default role (Company Owner), use the `ASSIGN_DEFAULT_PERMISSIONS` role to do so.
 
