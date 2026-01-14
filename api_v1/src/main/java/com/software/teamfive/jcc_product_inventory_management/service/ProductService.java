@@ -82,7 +82,6 @@ public class ProductService {
 
         if (!product.getSku().equals(request.getSku())) {
 
-            // Check for collisions (IMPORTANT)
             if (productRepository.existsBySku(request.getSku())) {
                 throw new ProductAlreadyExistsException(request.getSku());
             }
@@ -131,5 +130,4 @@ public class ProductService {
             product.setDateArchived(null);
         }
     }
-
 }

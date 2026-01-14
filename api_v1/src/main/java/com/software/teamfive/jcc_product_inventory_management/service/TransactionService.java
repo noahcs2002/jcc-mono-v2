@@ -10,6 +10,7 @@ import com.software.teamfive.jcc_product_inventory_management.repo.CompanyReposi
 import com.software.teamfive.jcc_product_inventory_management.repo.TransactionRepository;
 import com.software.teamfive.jcc_product_inventory_management.repo.UserRepository;
 import com.software.teamfive.jcc_product_inventory_management.utility.config.PermissionKeys;
+import com.software.teamfive.jcc_product_inventory_management.utility.exception.transaction.TransactionNotFoundException;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.company.CompanyNotFoundException;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.join.UserNotInCompanyException;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.permission.InsufficientPermissionsException;
@@ -17,7 +18,9 @@ import com.software.teamfive.jcc_product_inventory_management.utility.exception.
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -44,6 +47,10 @@ public class TransactionService {
     }
 
     public Transaction createTransaction(UUID userId, UUID companyId, CreateTransactionRequest request) {
+
+        Objects.requireNonNull(userId);
+        Objects.requireNonNull(companyId);
+        Objects.requireNonNull(request);
 
         // Find user
         User user = this.userRepository
@@ -81,6 +88,9 @@ public class TransactionService {
 
     public List<Transaction> getForCompanyAndUser(UUID userId, UUID companyId) {
 
+        Objects.requireNonNull(userId);
+        Objects.requireNonNull(companyId);
+
         // Find user
         User user = this.userRepository
                 .findById(userId)
@@ -106,7 +116,10 @@ public class TransactionService {
                 .findAllByDateArchivedIsNullAndDateDeletedIsNullAndCompanyIdAndCreatedById(companyId, userId);
     }
 
-    public ArchiveTransactionResponse archive(UUID userId, UUID companyId, UUID transactionId) {
+    public Transaction archive(UUID userId, UUID companyId, UUID transactionId) {
+        Objects.requireNonNull(transactionId);
+        Objects.requireNonNull(companyId);
+        Objects.requireNonNull(transactionId);
 
         // Find user
         User user = this.userRepository
@@ -130,8 +143,11 @@ public class TransactionService {
             throw new InsufficientPermissionsException(userId, PermissionKeys.ARCHIVE_TRANSACTION);
         }
         
-        
-        
-        return null;
+        Transaction transaction = this.transactionRepository.findById(transactionId).orElseThrow(
+                () -> new TransactionNotFoundException(transactionId)
+        );
+
+        transaction.setDateArchived(Instant.now());
+        return this.transactionRepository.save(transaction);
     }
 }

@@ -41,7 +41,13 @@ public class TransactionController {
 
     @DeleteMapping("/{userId}/{companyId}/{transactionId}")
     public ResponseEntity<ArchiveTransactionResponse> archiveTransaction(@PathVariable UUID userId, @PathVariable UUID companyId, @PathVariable UUID transactionId) {
-        ArchiveTransactionResponse response = this.transactionService.archive(userId, companyId, transactionId);
-        return ResponseEntity.ok(response);
+        Transaction response = this.transactionService.archive(userId, companyId, transactionId);
+
+        ArchiveTransactionResponse archiveTransactionResponse = new ArchiveTransactionResponse();
+        archiveTransactionResponse.setArchivedAt(response.getDateArchived());
+        archiveTransactionResponse.setUpdatedTransaction(response);
+        archiveTransactionResponse.setSuccessful(true);
+
+        return ResponseEntity.ok(archiveTransactionResponse);
     }
 }
