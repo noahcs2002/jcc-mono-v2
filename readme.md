@@ -4,7 +4,13 @@
 
 ## API
 
+## Maintenance
+There are a few maintenance scripts provided for convenience.
+
+- `rotate_jwt.sh` will rotate the JWT secret stored in the `application.properties` file for the v1 API. This should be done semi-regularly
+
 ## Database
+
 ### Adding new Permissions
 - All stored procedures in the database belong to the `APP_USER` schema.
 - To add a new permission to the system, run the stored proc `INSERT_PERMISSION()`. This procedure takes the following params:
