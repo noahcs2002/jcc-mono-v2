@@ -28,7 +28,6 @@ public class Transaction {
     @ManyToOne(fetch = FetchType.LAZY)
     private Company company;
 
-    @NotBlank
     @NotNull
     private BigDecimal amount;
 

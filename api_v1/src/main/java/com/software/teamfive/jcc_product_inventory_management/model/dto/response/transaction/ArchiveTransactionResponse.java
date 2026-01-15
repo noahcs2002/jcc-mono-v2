@@ -33,4 +33,10 @@ public class ArchiveTransactionResponse {
     public void setUpdatedTransaction(Transaction updatedTransaction) {
         this.updatedTransaction = updatedTransaction;
     }
+
+    public ArchiveTransactionResponse(boolean isSuccessful, Instant archivedAt, Transaction updatedTransaction) {
+        this.isSuccessful = isSuccessful;
+        this.archivedAt = archivedAt;
+        this.updatedTransaction = updatedTransaction;
+    }
 }

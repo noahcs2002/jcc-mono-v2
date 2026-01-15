@@ -43,10 +43,8 @@ public class TransactionController {
     public ResponseEntity<ArchiveTransactionResponse> archiveTransaction(@PathVariable UUID userId, @PathVariable UUID companyId, @PathVariable UUID transactionId) {
         Transaction response = this.transactionService.archive(userId, companyId, transactionId);
 
-        ArchiveTransactionResponse archiveTransactionResponse = new ArchiveTransactionResponse();
-        archiveTransactionResponse.setArchivedAt(response.getDateArchived());
-        archiveTransactionResponse.setUpdatedTransaction(response);
-        archiveTransactionResponse.setSuccessful(true);
+        ArchiveTransactionResponse archiveTransactionResponse =
+                new ArchiveTransactionResponse(true, response.getDateArchived(), response);
 
         return ResponseEntity.ok(archiveTransactionResponse);
     }

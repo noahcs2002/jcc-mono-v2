@@ -1,5 +1,6 @@
 package com.software.teamfive.jcc_product_inventory_management.service;
 
+import com.software.teamfive.jcc_product_inventory_management.model.audit.TransactionAudit;
 import com.software.teamfive.jcc_product_inventory_management.model.biz.Company;
 import com.software.teamfive.jcc_product_inventory_management.model.biz.User;
 import com.software.teamfive.jcc_product_inventory_management.model.dto.request.transaction.CreateTransactionRequest;
@@ -10,11 +11,13 @@ import com.software.teamfive.jcc_product_inventory_management.repo.CompanyReposi
 import com.software.teamfive.jcc_product_inventory_management.repo.TransactionRepository;
 import com.software.teamfive.jcc_product_inventory_management.repo.UserRepository;
 import com.software.teamfive.jcc_product_inventory_management.utility.config.PermissionKeys;
+import com.software.teamfive.jcc_product_inventory_management.utility.config.TransactionAuditStatus;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.transaction.TransactionNotFoundException;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.company.CompanyNotFoundException;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.join.UserNotInCompanyException;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.permission.InsufficientPermissionsException;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.user.UserNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +34,7 @@ public class TransactionService {
     private final CompanyRepository companyRepository;
     private final CompanyMemberService companyMemberService;
     private final PermissionValidatorService permissionValidatorService;
+    private final TransactionAuditService transactionAuditService;
 
 
     @Autowired
@@ -38,14 +42,17 @@ public class TransactionService {
                               UserRepository userRepository,
                               CompanyRepository companyRepository,
                               CompanyMemberService companyMemberService,
-                              PermissionValidatorService permissionValidatorService) {
+                              PermissionValidatorService permissionValidatorService,
+                              TransactionAuditService transactionAuditService) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.companyMemberService = companyMemberService;
         this.permissionValidatorService = permissionValidatorService;
+        this.transactionAuditService = transactionAuditService;
     }
 
+    @Transactional
     public Transaction createTransaction(UUID userId, UUID companyId, CreateTransactionRequest request) {
 
         Objects.requireNonNull(userId);
@@ -83,7 +90,17 @@ public class TransactionService {
         transaction.setStatus(request.getStatus());
         transaction.setDescription(request.getDescription());
 
-        return this.transactionRepository.save(transaction);
+        Transaction result = this.transactionRepository.save(transaction);
+
+        this.transactionAuditService.createTransactionAudit(
+                result.getId(),
+                result.getCreatedBy().getId(),
+                TransactionAuditStatus.CREATED,
+                "n/a",
+                String.format("Transaction %s created for %f", result.getId(), result.getAmount())
+        );
+
+        return result;
     }
 
     public List<Transaction> getForCompanyAndUser(UUID userId, UUID companyId) {
@@ -148,6 +165,16 @@ public class TransactionService {
         );
 
         transaction.setDateArchived(Instant.now());
-        return this.transactionRepository.save(transaction);
+        Transaction result = this.transactionRepository.save(transaction);
+
+        this.transactionAuditService.createTransactionAudit(
+                result.getId(),
+                result.getCreatedBy().getId(),
+                TransactionAuditStatus.ARCHIVED,
+                "n/a",
+                String.format("Transaction %s archived by %s", result.getId(), userId)
+        );
+
+        return result;
     }
 }
