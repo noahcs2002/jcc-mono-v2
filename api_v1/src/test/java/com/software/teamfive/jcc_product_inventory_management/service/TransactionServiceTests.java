@@ -1,5 +1,6 @@
 package com.software.teamfive.jcc_product_inventory_management.service;
 
+import com.software.teamfive.jcc_product_inventory_management.model.audit.TransactionAudit;
 import com.software.teamfive.jcc_product_inventory_management.model.biz.Company;
 import com.software.teamfive.jcc_product_inventory_management.model.biz.User;
 import com.software.teamfive.jcc_product_inventory_management.model.dto.request.transaction.CreateTransactionRequest;
@@ -11,6 +12,7 @@ import com.software.teamfive.jcc_product_inventory_management.repo.CompanyReposi
 import com.software.teamfive.jcc_product_inventory_management.repo.TransactionRepository;
 import com.software.teamfive.jcc_product_inventory_management.repo.UserRepository;
 import com.software.teamfive.jcc_product_inventory_management.utility.config.PermissionKeys;
+import com.software.teamfive.jcc_product_inventory_management.utility.config.TransactionAuditStatus;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.permission.InsufficientPermissionsException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,6 +54,9 @@ public class TransactionServiceTests {
     @Mock
     private PermissionValidatorService permissionValidatorService;
 
+    @Mock
+    private TransactionAuditService transactionAuditService;
+
     @InjectMocks
     private TransactionService transactionService;
 
@@ -92,7 +97,7 @@ public class TransactionServiceTests {
         when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(user));
         when(this.companyMemberService.getCompanyMemberForUserAndCompany(any(User.class), any(Company.class))).thenReturn(Optional.of(companyMember));
         when(this.permissionValidatorService.doesUserHavePerm(any(CompanyMember.class), any(PermissionKeys.class))).thenReturn(true);
-
+        when(this.transactionAuditService.createTransactionAudit(any(), any(), any(), any(), any())).thenReturn(new TransactionAudit());
 
         // Act
         Transaction result = this.transactionService.createTransaction(UUID.randomUUID(), UUID.randomUUID(), request);
@@ -101,6 +106,8 @@ public class TransactionServiceTests {
         verify(companyRepository, times(1)).findById(any(UUID.class));
         verify(userRepository, times(1)).findById(any(UUID.class));
         verify(companyMemberService, times(1)).getCompanyMemberForUserAndCompany(any(User.class), any(Company.class));
+        verify(transactionAuditService, times(1)).createTransactionAudit(any(), any(), eq(TransactionAuditStatus.CREATED), any(), any());
+        verify(permissionValidatorService, times(1)).doesUserHavePerm(any(CompanyMember.class), eq(PermissionKeys.CREATE_TRANSACTION));
 
         assertEquals(result.getCompany().getId(), companyId);
         assertEquals(result.getCreatedBy().getId(), userId);
@@ -295,14 +302,14 @@ public class TransactionServiceTests {
         transaction.setAmount(BigDecimal.valueOf(123.45));
 
         Transaction transactionArchived = new Transaction();
-        transaction.setCompany(company);
-        transaction.setCreatedBy(user);
-        transaction.setDateOfTransaction(Instant.ofEpochMilli(123L));
-        transaction.setDescription("Description");
-        transaction.setStatus(TransactionStatus.VOID);
-        transaction.setAmount(BigDecimal.valueOf(123.45));
+        transactionArchived.setCompany(company);
+        transactionArchived.setCreatedBy(user);
+        transactionArchived.setCreatedBy(user);
+        transactionArchived.setDateOfTransaction(Instant.ofEpochMilli(123L));
+        transactionArchived.setDescription("Description");
+        transactionArchived.setStatus(TransactionStatus.VOID);
+        transactionArchived.setAmount(BigDecimal.valueOf(123.45));
         transactionArchived.setDateArchived(Instant.ofEpochMilli(123L));
-
 
         when(this.transactionRepository.save(any(Transaction.class))).thenReturn(transactionArchived);
         when(this.transactionRepository.findById(any(UUID.class))).thenReturn(Optional.of(transaction));
@@ -310,6 +317,7 @@ public class TransactionServiceTests {
         when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(user));
         when(this.companyMemberService.getCompanyMemberForUserAndCompany(any(User.class), any(Company.class))).thenReturn(Optional.of(companyMember));
         when(this.permissionValidatorService.doesUserHavePerm(any(CompanyMember.class), any(PermissionKeys.class))).thenReturn(true);
+        when(this.transactionAuditService.createTransactionAudit(any(), any(), any(), any(), any())).thenReturn(new TransactionAudit());
 
         Transaction result = this.transactionService.archive(userId, companyId, UUID.randomUUID());
 

@@ -9,7 +9,6 @@ import com.software.teamfive.jcc_product_inventory_management.repo.UserRepositor
 import com.software.teamfive.jcc_product_inventory_management.utility.config.TransactionAuditStatus;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.transaction.TransactionNotFoundException;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.user.UserNotFoundException;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
