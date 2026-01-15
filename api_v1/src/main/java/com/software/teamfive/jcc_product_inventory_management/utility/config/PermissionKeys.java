@@ -4,6 +4,8 @@ package com.software.teamfive.jcc_product_inventory_management.utility.config;
  * Represents the permission keys in the System.
  */
 public enum PermissionKeys {
+    LOGON,
+
     DELETE_TRANSACTION,
     CREATE_TRANSACTION,
     UPDATE_TRANSACTION,
