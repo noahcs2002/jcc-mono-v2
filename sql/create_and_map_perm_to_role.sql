@@ -33,4 +33,8 @@ end; /
 
 select * from JOIN_ROLE_PERMISSION rp where rp.PERMISSION_ID = '480C91BA9AF9FB4FE063F15B000A934C' and rp.ROLE_ID = '9D696181D9C44519A1B8EBF0E0642B68';
 
-
+select p.KEY from JOIN_ROLE_PERMISSION rp
+    join biz_role r on r.id = rp.ROLE_ID
+    join biz_permission p on p.id = rp.PERMISSION_ID
+    join join_user_company_role ucr on ucr.ROLE_ID = 'E1D1D8EDB3364BB3B38F76A83024CB7F'
+    where p.DOMAIN = 'CATEGORY'
