@@ -921,8 +921,4 @@ class ProductServiceTests {
 
         assertEquals(deletedAt, product.getDateDeleted());
     }
-
-
-
 }
-
