@@ -36,27 +36,27 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
-    @PutMapping("/{productId}")
-    public ResponseEntity<Product> updateProduct(@PathVariable UUID productId, @Valid @RequestBody UpdateProductPutRequest value) {
-        Product updatedProduct = this.productService.updateProduct(productId, value);
+    @PutMapping("/{companyId}/{userId}/{productId}")
+    public ResponseEntity<Product> updateProduct(@PathVariable UUID productId, @PathVariable UUID companyId, @PathVariable UUID userId, @Valid @RequestBody UpdateProductPutRequest value) {
+        Product updatedProduct = this.productService.updateProduct(productId, companyId, userId, value);
         return ResponseEntity.ok(updatedProduct);
     }
 
-    @DeleteMapping("/{productId}/archive")
-    public ResponseEntity<Void> archiveProduct(@PathVariable UUID productId) {
-        this.productService.archiveProduct(productId);
+    @DeleteMapping("/{companyId}/{userId}/{productId}/archive")
+    public ResponseEntity<Void> archiveProduct(@PathVariable UUID productId, @PathVariable UUID userId, @PathVariable UUID companyId) {
+        this.productService.archiveProduct(productId, companyId, userId);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{productId}/delete")
-    public ResponseEntity<Void> deleteProduct(@PathVariable UUID productId) {
-        this.productService.deleteProduct(productId);
+    @DeleteMapping("/{companyId}/{userId}/{productId}/delete")
+    public ResponseEntity<Void> deleteProduct(@PathVariable UUID productId,  @PathVariable UUID userId, @PathVariable UUID companyId) {
+        this.productService.deleteProduct(productId, companyId, userId);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{productId}/unarchive")
-    public ResponseEntity<Void> unarchiveProduct(@PathVariable UUID productId) {
-        this.productService.unarchiveProduct(productId);
+    @PutMapping("/{companyId}/{userId}/{productId}/unarchive")
+    public ResponseEntity<Void> unarchiveProduct(@PathVariable UUID productId,  @PathVariable UUID userId, @PathVariable UUID companyId) {
+        this.productService.unarchiveProduct(productId, companyId, userId);
         return ResponseEntity.ok().build();
     }
 }
