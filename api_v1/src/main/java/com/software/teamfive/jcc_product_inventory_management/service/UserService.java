@@ -12,6 +12,8 @@ import com.software.teamfive.jcc_product_inventory_management.model.join.Company
 import com.software.teamfive.jcc_product_inventory_management.model.join.UserRole;
 import com.software.teamfive.jcc_product_inventory_management.repo.*;
 import com.software.teamfive.jcc_product_inventory_management.security.Security;
+import com.software.teamfive.jcc_product_inventory_management.utility.config.PermissionKeys;
+import com.software.teamfive.jcc_product_inventory_management.utility.exception.permission.InsufficientPermissionsException;
 import com.software.teamfive.jcc_product_inventory_management.utility.exception.user.UserAlreadyExistsException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -37,9 +41,10 @@ public class UserService implements UserDetailsService {
     final private UserRoleRepository userRoleRepository;
     final private JwtService jwtService;
     final private AuthenticationManager authenticationManager;
+    final private PermissionValidatorService permissionValidatorService;
 
     @Autowired
-    public UserService(UserRepository userRepository, CompanyRepository companyRepository, CompanyMemberRepository companyMemberRepository, RoleRepository roleRepository, UserRoleRepository userRoleRepository, JwtService jwtService, @Lazy AuthenticationManager authenticationManager) {
+    public UserService(UserRepository userRepository, CompanyRepository companyRepository, CompanyMemberRepository companyMemberRepository, RoleRepository roleRepository, UserRoleRepository userRoleRepository, JwtService jwtService, @Lazy AuthenticationManager authenticationManager, PermissionValidatorService permissionValidatorService) {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.companyMemberRepository = companyMemberRepository;
@@ -47,10 +52,16 @@ public class UserService implements UserDetailsService {
         this.userRoleRepository = userRoleRepository;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
+        this.permissionValidatorService = permissionValidatorService;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Objects.requireNonNull(username);
+        if (username.isBlank()) {
+            throw new NullPointerException("Username is null or empty");
+        }
+
         return userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
@@ -63,6 +74,13 @@ public class UserService implements UserDetailsService {
      */
     @Transactional
     public RegistrationResponse register(RegistrationRequest request) {
+
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(request.getEmail());
+        Objects.requireNonNull(request.getFirstName());
+        Objects.requireNonNull(request.getLastName());
+        Objects.requireNonNull(request.getCompanyName());
+        Objects.requireNonNull(request.getPasswordPlainText());
 
         User userCheckSum = this.userRepository.findByEmail(request.getEmail()).orElse(null);
 
@@ -123,11 +141,19 @@ public class UserService implements UserDetailsService {
                 )
         );
 
+        if (loginRequest.getEmail().isBlank() || loginRequest.getPassword().isBlank()) {
+            throw new NullPointerException("Email or password is null or empty");
+        }
+
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + loginRequest.getEmail()));
 
         CompanyMember companyMember = companyMemberRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("User is not associated with a company"));
+
+        if(!this.permissionValidatorService.doesUserHavePerm(companyMember, PermissionKeys.LOGON)) {
+            throw new InsufficientPermissionsException(user.getId(), PermissionKeys.LOGON);
+        }
 
         List<RoleResponse> roles = userRoleRepository.findByMemberId(companyMember.getId())
                 .stream()
@@ -144,13 +170,11 @@ public class UserService implements UserDetailsService {
         String token = jwtService.generateToken(user.getEmail(), claims);
 
         // 5. Return token + metadata
-        LoginResponse response = new LoginResponse(
+        return new LoginResponse(
                 user.getId(),
                 user.getEmail(),
                 companyMember.getCompany().getId(),
                 token
         );
-
-        return response;
     }
 }
